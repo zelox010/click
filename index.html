@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 600px;
+            height: 300px;
+            background-color: black;
+            border-radius: 15px;
+            border: 2px solid white;
+            box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .container:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 40px 20px rgba(255, 255, 255, 0.7);
+        }
+
+        .clicks-text {
+            position: absolute;
+            top: 10px;
+            font-size: 1.5em;
+            z-index: 2;
+            animation: textGlow 1s infinite alternate;
+        }
+
+        .button-container {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background: rgba(0, 0, 0, 0.5);
+            top: 0;
+            left: 0;
+            z-index: 3;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.5s linear;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: black;
+            color: white;
+            border: 2px solid white;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            animation: buttonGlow 1s infinite alternate;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, red, blue, white, purple);
+            animation: animateGlow 3s linear infinite;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        .button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .click-bux {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            font-size: 1em;
+            animation: textGlow 1s infinite alternate;
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 100px;
+            left: 10px;
+            font-size: 1.5em;
+            z-index: 2;
+            animation: textGlow 1s infinite alternate;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .nav-button {
+            flex: 1;
+            margin: 0 10px;
+            text-align: center;
+        }
+
+        @keyframes buttonGlow {
+            0% {
+                box-shadow: 0 0 10px red;
+            }
+            100% {
+                box-shadow: 0 0 20px blue;
+            }
+        }
+
+        @keyframes textGlow {
+            0% {
+                text-shadow: 0 0 10px red;
+            }
+            100% {
+                text-shadow: 0 0 20px blue;
+            }
+        }
+
+        @keyframes animateGlow {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="clicks-text">Clicks: <span id="clickCount">0</span></div>
+    <div class="timer-text">Time Left: <span id="timer">20</span>s</div>
+    <div class="container" id="clickContainer"></div>
+    <div class="button-container" id="buttonContainer">
+        <button class="button" id="winButton"><span></span></button>
+    </div>
+    <div class="click-bux">Click Bux: <span id="clickBux">0</span></div>
+
+    <div class="nav-buttons">
+        <div class="nav-button">
+            <button class="button" id="leaderboardButton">Leader Board</button>
+        </div>
+        <div class="nav-button">
+            <button class="button" id="shopButton">Shop</button>
+        </div>
+    </div>
+
+    <script>
+        let clickCount = parseInt(localStorage.getItem('clickCount')) || 0;
+        let clickBux = parseInt(localStorage.getItem('clickBux')) || 0;
+        let multiplier = parseInt(localStorage.getItem('multiplier')) || 1;
+        const timerDuration = 20;
+        let timeLeft = timerDuration;
+        let timerInterval = null;
+
+        const clickCountElement = document.getElementById('clickCount');
+        const clickBuxElement = document.getElementById('clickBux');
+        const clickContainer = document.getElementById('clickContainer');
+        const buttonContainer = document.getElementById('buttonContainer');
+        const winButton = document.getElementById('winButton');
+        const timerElement = document.getElementById('timer');
+
+        clickCountElement.textContent = clickCount;
+        clickBuxElement.textContent = clickBux;
+
+        // Start the game on the first click
+        clickContainer.addEventListener('click', () => {
+            if (!timerInterval) {
+                startTimer();
+            }
+            clickCount += multiplier;
+            clickCountElement.textContent = clickCount;
+            localStorage.setItem('clickCount', clickCount);
+        });
+
+        // Start the timer
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showResult();
+                }
+            }, 1000);
+        }
+
+        function showResult() {
+            buttonContainer.style.visibility = 'visible';
+            buttonContainer.style.opacity = '1';
+            const cash = calculateCash(clickCount);
+            winButton.querySelector('span').textContent = `You won ${cash} Click Bux!`;
+
+            // Reset event listener to avoid adding multiple listeners
+            winButton.removeEventListener('click', handleWinButtonClick);
+            winButton.addEventListener('click', handleWinButtonClick);
+        }
+
+        function handleWinButtonClick() {
+            const cash = calculateCash(clickCount);
+            clickBux += cash;
+            localStorage.setItem('clickBux', clickBux);
+            clickBuxElement.textContent = clickBux;
+            buttonContainer.style.visibility = 'hidden';
+            buttonContainer.style.opacity = '0';
+            resetGame(); // Only reset the game when the user starts clicking again
+        }
+
+        function calculateCash(clicks) {
+            return Math.floor(clicks * 0.5 + Math.random() * clicks * 0.5);
+        }
+
+        function resetGame() {
+            clickCount = 0;
+            timeLeft = timerDuration;
+            timerElement.textContent = timeLeft;
+            clickCountElement.textContent = clickCount;
+            localStorage.setItem('clickCount', clickCount);
+            timerInterval = null; // Reset timer, but don't restart until clicking
+        }
+
+        // Apply x2 Clicks Multiplier
+        if (localStorage.getItem('x2ClicksPurchased')) {
+            multiplier = 2;
+        }
+
+        // Add functionality to the buttons
+        document.getElementById('leaderboardButton').addEventListener('click', () => {
+            window.location.href = 'https://zelox010.github.io/Leaderboard/'; // Replace LEADERBOARD_URL with the actual leaderboard page URL
+        });
+
+        document.getElementById('shopButton').addEventListener('click', () => {
+            window.location.href = 'https://zelox010.github.io/Shop/'; // Replace SHOP_URL with the actual shop page URL
+        });
+    </script>
+</body>
+</html>
